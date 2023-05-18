@@ -19,7 +19,7 @@ exports.createBook = (req, res) => {
     });
 };
 
-exports.getOneBook = (req, res, next) => {
+exports.getOneBook = (req, res) => {
   Book.findOne({
     _id: req.params.id,
   })
@@ -33,7 +33,7 @@ exports.getOneBook = (req, res, next) => {
     });
 };
 
-exports.modifyBook = (req, res, next) => {
+exports.modifyBook = (req, res) => {
   const bookObject = req.file
     ? {
         ...JSON.parse(req.body.book),
@@ -43,7 +43,7 @@ exports.modifyBook = (req, res, next) => {
       }
     : { ...req.body };
 
-  delete bookObject._userId;
+  delete bookObject.userId;
   Book.findOne({ _id: req.params.id })
     .then((book) => {
       if (book.userId != req.auth.userId) {
@@ -58,11 +58,12 @@ exports.modifyBook = (req, res, next) => {
       }
     })
     .catch((error) => {
-      res.status(400).json({ error });
+      console.log(error);
+      return res.status(400).json({ error });
     });
 };
 
-exports.deleteBook = (req, res, next) => {
+exports.deleteBook = (req, res) => {
   Book.findOne({ _id: req.params.id })
     .then((book) => {
       if (book.userId != req.auth.userId) {
@@ -83,14 +84,28 @@ exports.deleteBook = (req, res, next) => {
     });
 };
 
-exports.getAllBook = (req, res, next) => {
+exports.getAllBook = (req, res) => {
   Book.find()
     .then((books) => {
       res.status(200).json(books);
     })
     .catch((error) => {
       res.status(400).json({
-        error: error,
+        error,
+      });
+    });
+};
+
+exports.bestrating = (req, res) => {
+  Book.find()
+    .then((books) => {
+      books.sort((a, b) => b.rating - a.rating);
+      const topBooks = books.slice(0, 3);
+      res.status(200).json(topBooks);
+    })
+    .catch((error) => {
+      res.status(400).json({
+        error,
       });
     });
 };
