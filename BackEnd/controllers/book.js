@@ -19,6 +19,7 @@ exports.createBook = (req, res) => {
     });
 };
 
+
 exports.getOneBook = (req, res) => {
   Book.findOne({
     _id: req.params.id,
@@ -109,3 +110,9 @@ exports.bestrating = (req, res) => {
       });
     });
 };
+
+
+exports.rating = (req, res) => {
+  
+
+}
