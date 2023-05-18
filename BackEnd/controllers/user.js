@@ -13,7 +13,10 @@ exports.signup = (req, res) => {
       userNew
         .save()
         .then(() => res.status(201).json({ message: 'Utilisateur créé !' }))
-        .catch((error) => res.status(400).json({ message: 'erreur 400' }));
+        .catch((error) => {
+          console.log(error);
+          return res.status(400).json({ message: 'erreur 400' });
+        });
     })
     .catch((error) => res.status(500).json({ error }));
 };
@@ -37,7 +40,7 @@ exports.login = (req, res, next) => {
             }),
           });
         })
-        .catch((error) => res.status(500).json({ error }));
+        .catch((error) => res.status(500).json({ error: 'erreur 1' }));
     })
-    .catch((error) => res.status(500).json({ error }));
+    .catch((error) => res.status(500).json({ error: 'erreur 2' }));
 };
