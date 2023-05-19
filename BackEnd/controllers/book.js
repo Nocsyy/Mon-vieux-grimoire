@@ -1,5 +1,6 @@
 const Book = require('../models/book');
 const fs = require('fs');
+const { faTachometerAverage } = require('@fortawesome/free-solid-svg-icons');
 
 exports.createBook = (req, res) => {
   const bookObject = JSON.parse(req.body.book);
@@ -100,7 +101,7 @@ exports.getAllBook = (req, res) => {
 exports.bestrating = (req, res) => {
   Book.find()
     .then((books) => {
-      books.sort((a, b) => b.rating - a.rating);
+      books.sort((a, b) => b.averageRating - a.averageRating);
       const topBooks = books.slice(0, 3);
       res.status(200).json(topBooks);
     })
@@ -112,7 +113,32 @@ exports.bestrating = (req, res) => {
 };
 
 
-exports.rating = (req, res) => {
-  
 
-}
+exports.rating = (req, res) => {
+  const { rating, userId } = req.body;
+  const bookId = req.params.id;
+
+  Book.findOneAndUpdate(
+    { _id: bookId },
+    { $push: { ratings: { grade: rating, userId } } },
+    { new: true } // Renvoie le document mis à jour plutôt que l'ancien
+  )
+    .then((updatedBook) => {
+      // Calculer la moyenne des notes
+      const grades = updatedBook.ratings.map((rating) => rating.grade);
+      const sumGrades = grades.reduce((total, grade) => total + grade, 0);
+      updatedBook.averageRating = sumGrades / updatedBook.ratings.length;
+
+      // Sauvegarder les modifications
+      return updatedBook.save();
+    })
+    .then((bookWithAverageRating) => {
+      res.status(200).json(bookWithAverageRating);
+    })
+    .catch((error) => {
+      res.status(500).json({ error });
+    });
+};
+
+
+
