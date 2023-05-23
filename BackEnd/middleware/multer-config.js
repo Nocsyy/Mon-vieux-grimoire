@@ -1,5 +1,7 @@
 const multer = require('multer');
-const maxSize = 1 * 700 * 700;
+const sharp = require('sharp');
+const fs = require('fs');
+const maxSize = 2 * 1024 * 1024;
 const MIME_TYPES = {
   'image/jpg': 'jpg',
   'image/jpeg': 'jpg',
@@ -18,4 +20,34 @@ const storage = multer.diskStorage({
 
 });
 
-module.exports = multer({ storage: storage, limits: { fileSize: maxSize } }).single('image');
+const resizeImage = (req, res, next) => {
+  if (!req.file) {
+    return next();
+  }
+
+  const filePath = req.file.path;
+
+  sharp(filePath)
+    .resize({ width: 800, height: 600 }) // Spécifiez les dimensions souhaitées ici
+    .toBuffer()
+    .then((buffer) => {
+      // Remplacez le fichier d'origine par l'image redimensionnée
+      fs.writeFile(filePath, buffer, (writeErr) => {
+        if (writeErr) {
+          return next(writeErr);
+        }
+        next();
+      });
+    })
+    .catch((err) => {
+      next(err);
+    });
+};
+module.exports = (req, res, next) => {
+  multer({ storage: storage, limits: { fileSize: maxSize } }).single('image')(req, res, (err) => {
+    if (err) {
+      return next(err);
+    }
+    resizeImage(req, res, next);
+  });
+};

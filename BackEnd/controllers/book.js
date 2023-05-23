@@ -1,6 +1,6 @@
 const Book = require('../models/book');
 const fs = require('fs');
-const { faTachometerAverage } = require('@fortawesome/free-solid-svg-icons');
+
 
 exports.createBook = (req, res) => {
   const bookObject = JSON.parse(req.body.book);
