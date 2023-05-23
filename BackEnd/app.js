@@ -1,3 +1,6 @@
+require('dotenv').config();
+const mongodbSecret = process.env.MONGODB_SECRET_KEY;
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
@@ -8,8 +11,7 @@ const userRoutes = require('./routes/auth');
 
 mongoose
   .connect(
-    'mongodb+srv://andy:1YQGF0cXSF0USSBK@cluster0.ycrrl2e.mongodb.net/monVieuxGrimoire?retryWrites=true&w=majority',
-
+    mongodbSecret,
     { useNewUrlParser: true, useUnifiedTopology: true }
   )
   .then(() => console.log('Connexion à MongoDB réussie !'))

@@ -7,9 +7,8 @@ exports.createBook = (req, res) => {
   delete bookObject._id;
   const book = new Book({
     ...bookObject,
-    imageUrl: `${req.protocol}://${req.get('host')}/images/${
-      req.file.filename
-    }`,
+    imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename
+      }`,
   });
   book
     .save()
@@ -38,11 +37,10 @@ exports.getOneBook = (req, res) => {
 exports.modifyBook = (req, res) => {
   const bookObject = req.file
     ? {
-        ...JSON.parse(req.body.book),
-        imageUrl: `${req.protocol}://${req.get('host')}/images/${
-          req.file.filename
+      ...JSON.parse(req.body.book),
+      imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename
         }`,
-      }
+    }
     : { ...req.body };
 
   delete bookObject.userId;
@@ -51,12 +49,25 @@ exports.modifyBook = (req, res) => {
       if (book.userId != req.auth.userId) {
         res.status(401).json({ message: 'Not authorized' });
       } else {
-        Book.updateOne(
-          { _id: req.params.id },
-          { ...bookObject, _id: req.params.id }
-        )
-          .then(() => res.status(200).json({ message: 'Objet modifié!' }))
-          .catch((error) => res.status(401).json({ error }));
+        if (req.file) {
+          const filename = book.imageUrl.split('/images/')[1];
+          fs.unlink(`images/${filename}`, () => {
+            Book.updateOne(
+              { _id: req.params.id },
+              { ...bookObject, _id: req.params.id }
+            )
+              .then(() => res.status(200).json({ message: 'Objet modifié!' }))
+              .catch((error) => res.status(401).json({ error }));
+          })
+        } else {
+          Book.updateOne(
+            { _id: req.params.id },
+            { ...bookObject, _id: req.params.id }
+          )
+            .then(() => res.status(200).json({ message: 'Objet modifié!' }))
+            .catch((error) => res.status(401).json({ error }));
+        }
+
       }
     })
     .catch((error) => {
@@ -121,15 +132,13 @@ exports.rating = (req, res) => {
   Book.findOneAndUpdate(
     { _id: bookId },
     { $push: { ratings: { grade: rating, userId } } },
-    { new: true } // Renvoie le document mis à jour plutôt que l'ancien
+    { new: true } //new doc maj
   )
     .then((updatedBook) => {
-      // Calculer la moyenne des notes
       const grades = updatedBook.ratings.map((rating) => rating.grade);
       const sumGrades = grades.reduce((total, grade) => total + grade, 0);
       updatedBook.averageRating = sumGrades / updatedBook.ratings.length;
 
-      // Sauvegarder les modifications
       return updatedBook.save();
     })
     .then((bookWithAverageRating) => {
